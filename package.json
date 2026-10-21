@@ -1,0 +1,33 @@
+{
+  "name": "pharmacy-saas",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-minded Pharmacy Billing & Stock Management SaaS for Indian Pharmacies",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "start:api": "npm --workspace=apps/api run start:dev",
+    "start:web": "npm --workspace=apps/web run start",
+    "build:api": "npm --workspace=apps/api run build",
+    "build:web": "npm --workspace=apps/web run build",
+    "test:api": "npm --workspace=apps/api run test",
+    "test:web": "npm --workspace=apps/web run test",
+    "db:migrate": "npm --workspace=apps/api run prisma:migrate",
+    "db:generate": "npm --workspace=apps/api run prisma:generate",
+    "db:seed": "npm --workspace=apps/api run prisma:seed"
+  },
+  "keywords": [
+    "pharmacy",
+    "pos",
+    "saas",
+    "ionic",
+    "angular",
+    "nestjs",
+    "prisma",
+    "fefo",
+    "gst"
+  ],
+  "author": "",
+  "license": "UNLICENSED"
+}

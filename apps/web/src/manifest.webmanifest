@@ -1,0 +1,9 @@
+{
+  "name": "PharmaPulse POS",
+  "short_name": "PharmaPulse",
+  "theme_color": "#0f766e",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/"
+}
