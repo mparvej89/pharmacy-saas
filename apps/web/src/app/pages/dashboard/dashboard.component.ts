@@ -22,6 +22,8 @@ import {
   IonLabel,
   IonRefresher,
   IonRefresherContent,
+  IonMenuButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -64,10 +66,15 @@ import { AuthService } from '../../core/services/auth.service';
     IonLabel,
     IonRefresher,
     IonRefresherContent,
+    IonMenuButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+          <ion-menu-button color="light"></ion-menu-button>
+        </ion-buttons>
         <ion-title>Pharmacy Operations Dashboard</ion-title>
         <ion-button slot="end" fill="clear" (click)="loadDashboard()">
           <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>

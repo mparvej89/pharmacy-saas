@@ -24,6 +24,8 @@ import {
   IonSelectOption,
   IonToast,
   IonSpinner,
+  IonMenuButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -75,10 +77,15 @@ import { Medicine, CartItem } from '../../core/models';
     IonSelectOption,
     IonToast,
     IonSpinner,
+    IonMenuButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+          <ion-menu-button color="light"></ion-menu-button>
+        </ion-buttons>
         <ion-title>
           POS Terminal - {{ authService.activeStore()?.name || 'Pharmacy POS' }}
         </ion-title>
@@ -741,8 +748,9 @@ export class PosComponent implements OnInit {
     if (existingIndex > -1) {
       this.increaseQty(existingIndex);
     } else {
-      const unitPrice = med.sellingPrice;
-      const gstRate = med.gstRate;
+      // Coerce Prisma Decimal strings → JS numbers
+      const unitPrice = Number(med.sellingPrice);
+      const gstRate = Number(med.gstRate);
       const halfRate = gstRate / 2;
       const cgst = (unitPrice * halfRate) / 100;
       const sgst = (unitPrice * halfRate) / 100;
@@ -753,7 +761,7 @@ export class PosComponent implements OnInit {
         selectedBatch: med.batches?.[0], // FEFO earliest batch
         quantity: 1,
         unitPrice,
-        mrp: med.mrp,
+        mrp: Number(med.mrp),
         discountPercent: 0,
         gstRate,
         taxableAmount: unitPrice,
@@ -813,10 +821,17 @@ export class PosComponent implements OnInit {
   }
 
   private recalculateItem(item: CartItem) {
-    const lineGross = item.unitPrice * item.quantity;
-    const discount = (lineGross * item.discountPercent) / 100;
+    // Ensure all fields are numbers (guard against stale string values)
+    const unitPrice = Number(item.unitPrice);
+    const discountPercent = Number(item.discountPercent);
+    const gstRate = Number(item.gstRate);
+    const lineGross = unitPrice * item.quantity;
+    const discount = (lineGross * discountPercent) / 100;
     const taxable = lineGross - discount;
-    const halfGst = item.gstRate / 2;
+    const halfGst = gstRate / 2;
+    item.unitPrice = unitPrice;
+    item.discountPercent = discountPercent;
+    item.gstRate = gstRate;
     item.taxableAmount = taxable;
     item.cgstAmount = (taxable * halfGst) / 100;
     item.sgstAmount = (taxable * halfGst) / 100;

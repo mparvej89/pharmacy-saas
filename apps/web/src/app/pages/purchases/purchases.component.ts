@@ -21,6 +21,8 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonMenuButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -59,11 +61,16 @@ import { Medicine } from '../../core/models';
     IonGrid,
     IonRow,
     IonCol,
+    IonMenuButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Supplier Purchases & Goods Receipt</ion-title>
+        <ion-buttons slot="start">
+          <ion-menu-button color="light"></ion-menu-button>
+        </ion-buttons>
+        <ion-title>Purchases & GRN</ion-title>
         <ion-button slot="end" fill="solid" color="light" (click)="openCreateModal()">
           <ion-icon name="bag-add-outline" slot="start"></ion-icon>
           New Purchase Invoice
@@ -128,7 +135,7 @@ import { Medicine } from '../../core/models';
       </ion-card>
 
       <!-- New Purchase Modal -->
-      <ion-modal [isOpen]="isModalOpen()">
+      <ion-modal [isOpen]="isModalOpen()" class="large-form-modal">
         <ng-template>
           <ion-header>
             <ion-toolbar color="primary">
@@ -143,11 +150,11 @@ import { Medicine } from '../../core/models';
             <form [formGroup]="purchaseForm" (ngSubmit)="saveDraft()">
               <ion-grid>
                 <ion-row>
-                  <ion-col size="12" size-md="4">
-                    <ion-item lines="inset" class="form-item">
+                  <ion-col size="12" sizeMd="4">
+                    <ion-item fill="outline" class="form-item">
                       <ion-select
                         label="Supplier *"
-                        labelPlacement="stacked"
+                        labelPlacement="floating"
                         formControlName="supplierId"
                       >
                         <ion-select-option *ngFor="let s of suppliers()" [value]="s.id">
@@ -156,20 +163,21 @@ import { Medicine } from '../../core/models';
                       </ion-select>
                     </ion-item>
                   </ion-col>
-                  <ion-col size="12" size-md="4">
-                    <ion-item lines="inset" class="form-item">
+                  <ion-col size="12" sizeMd="4">
+                    <ion-item fill="outline" class="form-item">
                       <ion-input
                         label="Supplier Invoice # *"
-                        labelPlacement="stacked"
+                        labelPlacement="floating"
                         formControlName="supplierInvoiceNumber"
+                        placeholder="e.g. INV-2026-99"
                       ></ion-input>
                     </ion-item>
                   </ion-col>
-                  <ion-col size="12" size-md="4">
-                    <ion-item lines="inset" class="form-item">
+                  <ion-col size="12" sizeMd="4">
+                    <ion-item fill="outline" class="form-item">
                       <ion-input
                         label="Invoice Date *"
-                        labelPlacement="stacked"
+                        labelPlacement="floating"
                         type="date"
                         formControlName="supplierInvoiceDate"
                       ></ion-input>
@@ -181,7 +189,7 @@ import { Medicine } from '../../core/models';
                 <div class="line-items-section ion-margin-top">
                   <div class="section-header">
                     <h4>Medicine Batches to Receive</h4>
-                    <ion-button size="small" fill="outline" (click)="addItemLine()">
+                    <ion-button size="small" fill="solid" color="primary" (click)="addItemLine()">
                       <ion-icon name="add-outline" slot="start"></ion-icon>
                       Add Line Item
                     </ion-button>
@@ -191,52 +199,92 @@ import { Medicine } from '../../core/models';
                     <div
                       *ngFor="let item of itemsFormArray.controls; let i = index"
                       [formGroupName]="i"
-                      class="item-line-row ion-margin-top"
+                      class="item-line-card ion-padding"
                     >
+                      <div class="item-header-row">
+                        <span class="item-badge">Batch Item #{{ i + 1 }}</span>
+                        <ion-button fill="clear" color="danger" size="small" (click)="removeItemLine(i)">
+                          <ion-icon name="trash-outline" slot="start"></ion-icon>
+                          Delete Item
+                        </ion-button>
+                      </div>
+
                       <ion-row>
-                        <ion-col size="12" size-md="3">
-                          <ion-item lines="inset" class="form-item">
-                            <ion-select label="Medicine *" labelPlacement="stacked" formControlName="medicineId">
+                        <ion-col size="12" sizeMd="6">
+                          <ion-item fill="outline" class="form-item">
+                            <ion-select label="Medicine *" labelPlacement="floating" formControlName="medicineId">
                               <ion-select-option *ngFor="let med of medicines()" [value]="med.id">
                                 {{ med.name }}
                               </ion-select-option>
                             </ion-select>
                           </ion-item>
                         </ion-col>
-                        <ion-col size="6" size-md="2">
-                          <ion-item lines="inset" class="form-item">
-                            <ion-input label="Batch #" labelPlacement="stacked" formControlName="batchNumber"></ion-input>
+                        <ion-col size="6" sizeMd="3">
+                          <ion-item fill="outline" class="form-item">
+                            <ion-input
+                              label="Batch #"
+                              labelPlacement="floating"
+                              formControlName="batchNumber"
+                              placeholder="e.g. B2401"
+                            ></ion-input>
                           </ion-item>
                         </ion-col>
-                        <ion-col size="6" size-md="2">
-                          <ion-item lines="inset" class="form-item">
-                            <ion-input label="Expiry Date" labelPlacement="stacked" type="date" formControlName="expiryDate"></ion-input>
+                        <ion-col size="6" sizeMd="3">
+                          <ion-item fill="outline" class="form-item">
+                            <ion-input
+                              label="Expiry Date *"
+                              labelPlacement="floating"
+                              type="date"
+                              formControlName="expiryDate"
+                            ></ion-input>
                           </ion-item>
                         </ion-col>
-                        <ion-col size="4" size-md="1">
-                          <ion-item lines="inset" class="form-item">
-                            <ion-input label="Paid Qty" labelPlacement="stacked" type="number" formControlName="quantity"></ion-input>
+                      </ion-row>
+
+                      <ion-row class="ion-margin-top">
+                        <ion-col size="6" sizeMd="3">
+                          <ion-item fill="outline" class="form-item">
+                            <ion-input
+                              label="Paid Quantity *"
+                              labelPlacement="floating"
+                              type="number"
+                              formControlName="quantity"
+                              placeholder="10"
+                            ></ion-input>
                           </ion-item>
                         </ion-col>
-                        <ion-col size="4" size-md="1">
-                          <ion-item lines="inset" class="form-item">
-                            <ion-input label="Free Qty" labelPlacement="stacked" type="number" formControlName="freeQuantity"></ion-input>
+                        <ion-col size="6" sizeMd="3">
+                          <ion-item fill="outline" class="form-item">
+                            <ion-input
+                              label="Free Quantity"
+                              labelPlacement="floating"
+                              type="number"
+                              formControlName="freeQuantity"
+                              placeholder="0"
+                            ></ion-input>
                           </ion-item>
                         </ion-col>
-                        <ion-col size="4" size-md="1">
-                          <ion-item lines="inset" class="form-item">
-                            <ion-input label="Rate (₹)" labelPlacement="stacked" type="number" formControlName="purchaseRate"></ion-input>
+                        <ion-col size="6" sizeMd="3">
+                          <ion-item fill="outline" class="form-item">
+                            <ion-input
+                              label="Purchase Rate (₹) *"
+                              labelPlacement="floating"
+                              type="number"
+                              formControlName="purchaseRate"
+                              placeholder="0.00"
+                            ></ion-input>
                           </ion-item>
                         </ion-col>
-                        <ion-col size="4" size-md="1">
-                          <ion-item lines="inset" class="form-item">
-                            <ion-input label="MRP (₹)" labelPlacement="stacked" type="number" formControlName="mrp"></ion-input>
+                        <ion-col size="6" sizeMd="3">
+                          <ion-item fill="outline" class="form-item">
+                            <ion-input
+                              label="MRP (₹) *"
+                              labelPlacement="floating"
+                              type="number"
+                              formControlName="mrp"
+                              placeholder="0.00"
+                            ></ion-input>
                           </ion-item>
-                        </ion-col>
-                        <ion-col size="2" size-md="1" class="ion-align-self-center ion-text-center">
-                          <ion-button fill="clear" color="danger" size="small" (click)="removeItemLine(i)">
-                            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-                          </ion-button>
                         </ion-col>
                       </ion-row>
                     </div>
@@ -319,11 +367,44 @@ import { Medicine } from '../../core/models';
         font-weight: 700;
         color: #0f172a;
       }
-      .item-line-row {
+      .item-line-card {
         background: #f8fafc;
-        padding: 12px;
-        border-radius: 8px;
+        border-radius: 10px;
         border: 1px solid #e2e8f0;
+        margin-top: 14px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      .item-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed #cbd5e1;
+      }
+      .item-badge {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: #0369a1;
+        background: #e0f2fe;
+        padding: 4px 10px;
+        border-radius: 6px;
+      }
+      ion-modal {
+        --width: 920px;
+        --max-width: 95vw;
+        --height: 85vh;
+        --border-radius: 14px;
+      }
+      ion-item.form-item {
+        --background: #ffffff;
+      }
+      ion-input::part(label),
+      ion-select::part(label) {
+        text-overflow: unset !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        font-size: 0.85rem;
       }
     `,
   ],

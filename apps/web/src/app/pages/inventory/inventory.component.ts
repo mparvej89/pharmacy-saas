@@ -21,6 +21,8 @@ import {
   IonSelectOption,
   IonToast,
   IonSpinner,
+  IonMenuButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -60,11 +62,16 @@ import { ApiService } from '../../core/services/api.service';
     IonSelectOption,
     IonToast,
     IonSpinner,
+    IonMenuButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Batch Inventory & FEFO Engine</ion-title>
+        <ion-buttons slot="start">
+          <ion-menu-button color="light"></ion-menu-button>
+        </ion-buttons>
+        <ion-title>Inventory & FEFO</ion-title>
         <ion-button slot="end" fill="solid" color="light" (click)="openAdjustmentModal()">
           <ion-icon name="create-outline" slot="start"></ion-icon>
           Adjust Stock
@@ -74,16 +81,16 @@ import { ApiService } from '../../core/services/api.service';
       <ion-toolbar>
         <ion-segment [(ngModel)]="activeTab" (ionChange)="onTabChange()">
           <ion-segment-button value="batches">
-            <ion-label>All Batches (FEFO)</ion-label>
+            <ion-label>All Batches</ion-label>
           </ion-segment-button>
           <ion-segment-button value="low-stock">
             <ion-label>Low Stock</ion-label>
           </ion-segment-button>
           <ion-segment-button value="expiring">
-            <ion-label>Expiring Batches</ion-label>
+            <ion-label>Expiring</ion-label>
           </ion-segment-button>
           <ion-segment-button value="ledger">
-            <ion-label>Stock Movement Ledger</ion-label>
+            <ion-label>Ledger</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
@@ -342,11 +349,29 @@ import { ApiService } from '../../core/services/api.service';
       .inventory-content {
         --background: #f8fafc;
       }
+      ion-segment-button {
+        --font-size: 0.72rem;
+        letter-spacing: 0;
+        min-width: 0;
+        flex: 1;
+      }
+      ion-segment-button ion-label {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        font-size: 0.72rem;
+        line-height: 1.2;
+      }
       .table-card {
         border-radius: 12px;
         border: 1px solid #e2e8f0;
         background: #ffffff;
         margin: 0;
+        overflow: hidden;
+      }
+      .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
       .pharmacy-table {
         width: 100%;

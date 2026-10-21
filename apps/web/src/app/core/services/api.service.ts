@@ -141,4 +141,13 @@ export class ApiService {
     if (endDate) params = params.set('endDate', endDate);
     return this.http.get<any[]>(`${this.baseUrl}/reports/schedule-h1-register`, { params });
   }
+
+  // ----------------- STORES & MULTI-TENANCY -----------------
+  getStores(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/stores`);
+  }
+
+  createStore(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/stores`, data);
+  }
 }

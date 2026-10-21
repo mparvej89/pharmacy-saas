@@ -119,6 +119,14 @@ import { AuthService } from '../../core/services/auth.service';
               <div class="demo-buttons">
                 <ion-button
                   size="small"
+                  fill="solid"
+                  color="danger"
+                  (click)="fillCredentials('superadmin@pharmapulse.io', 'Password@123')"
+                >
+                  SaaS Super Admin
+                </ion-button>
+                <ion-button
+                  size="small"
                   fill="outline"
                   color="primary"
                   (click)="fillCredentials('admin@apollopharmacy.local', 'Password@123')"
@@ -266,9 +274,13 @@ export class LoginComponent {
     this.errorMessage.set(null);
 
     this.authService.login(this.loginForm.value).subscribe({
-      next: () => {
+      next: (res) => {
         this.isLoading.set(false);
-        this.router.navigate(['/dashboard']);
+        if (res.user.isSuperAdmin) {
+          this.router.navigate(['/stores']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: (err) => {
         this.isLoading.set(false);

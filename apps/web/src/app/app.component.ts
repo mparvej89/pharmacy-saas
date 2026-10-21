@@ -30,6 +30,8 @@ import {
   logOutOutline,
   businessOutline,
   personCircleOutline,
+  menuOutline,
+  menuSharp,
 } from 'ionicons/icons';
 import { AuthService } from './core/services/auth.service';
 
@@ -58,7 +60,7 @@ import { AuthService } from './core/services/auth.service';
   ],
   template: `
     <ion-app>
-      <ion-split-pane contentId="main-content" [when]="authService.isAuthenticated()">
+      <ion-split-pane contentId="main-content" when="lg">
         <!-- Side Navigation Menu (Active when logged in) -->
         <ion-menu contentId="main-content" type="overlay" *ngIf="authService.isAuthenticated()">
           <ion-header>
@@ -74,52 +76,78 @@ import { AuthService } from './core/services/auth.service';
                 <ion-icon name="person-circle-outline" class="user-avatar-icon"></ion-icon>
                 <div class="user-details">
                   <div class="user-name">{{ user.fullName }}</div>
-                  <ion-badge color="secondary" class="role-badge">{{ user.activeStore?.role || 'Staff' }}</ion-badge>
+                  <ion-badge [color]="user.isSuperAdmin ? 'danger' : 'secondary'" class="role-badge">
+                    {{ user.isSuperAdmin ? 'SAAS_SUPER_ADMIN' : (user.activeStore?.role || 'Staff') }}
+                  </ion-badge>
                 </div>
               </div>
-              <div class="store-box ion-margin-top" *ngIf="user.activeStore">
+
+              <!-- Super Admin Platform Scope Box -->
+              <div class="store-box saas-platform-box ion-margin-top" *ngIf="user.isSuperAdmin">
+                <ion-icon name="business-outline"></ion-icon>
+                <span>Global SaaS Platform Console</span>
+              </div>
+
+              <!-- Store Specific Pharmacy Scope Box -->
+              <div class="store-box ion-margin-top" *ngIf="!user.isSuperAdmin && user.activeStore">
                 <ion-icon name="business-outline"></ion-icon>
                 <span>{{ user.activeStore.name }}</span>
               </div>
             </div>
 
             <!-- Navigation Links -->
-            <ion-list lines="none" class="nav-list">
+            <ion-list lines="none" class="nav-list" *ngIf="authService.currentUser() as user">
               <ion-menu-toggle auto-hide="false">
-                <ion-item routerLink="/dashboard" routerLinkActive="active-item" class="nav-item">
-                  <ion-icon name="grid-outline" slot="start"></ion-icon>
-                  <ion-label>Dashboard</ion-label>
-                </ion-item>
+                <!-- 1. PURE SAAS SUPER ADMIN MENU -->
+                <ng-container *ngIf="user.isSuperAdmin">
+                  <ion-item routerLink="/stores" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="business-outline" slot="start"></ion-icon>
+                    <ion-label>Tenant Stores & Onboarding</ion-label>
+                  </ion-item>
 
-                <ion-item routerLink="/pos" routerLinkActive="active-item" class="nav-item pos-highlight">
-                  <ion-icon name="cart-outline" slot="start"></ion-icon>
-                  <ion-label>POS Billing Terminal</ion-label>
-                </ion-item>
+                  <ion-item routerLink="/reports" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="document-text-outline" slot="start"></ion-icon>
+                    <ion-label>Global Reports & Audit</ion-label>
+                  </ion-item>
+                </ng-container>
 
-                <ion-item routerLink="/medicines" routerLinkActive="active-item" class="nav-item">
-                  <ion-icon name="medkit-outline" slot="start"></ion-icon>
-                  <ion-label>Medicine Catalogue</ion-label>
-                </ion-item>
+                <!-- 2. CLINIC / STORE OWNER & STAFF MENU -->
+                <ng-container *ngIf="!user.isSuperAdmin">
+                  <ion-item routerLink="/dashboard" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="grid-outline" slot="start"></ion-icon>
+                    <ion-label>Dashboard</ion-label>
+                  </ion-item>
 
-                <ion-item routerLink="/inventory" routerLinkActive="active-item" class="nav-item">
-                  <ion-icon name="cube-outline" slot="start"></ion-icon>
-                  <ion-label>Inventory & FEFO</ion-label>
-                </ion-item>
+                  <ion-item routerLink="/pos" routerLinkActive="active-item" class="nav-item pos-highlight">
+                    <ion-icon name="cart-outline" slot="start"></ion-icon>
+                    <ion-label>POS Billing Terminal</ion-label>
+                  </ion-item>
 
-                <ion-item routerLink="/purchases" routerLinkActive="active-item" class="nav-item">
-                  <ion-icon name="bag-add-outline" slot="start"></ion-icon>
-                  <ion-label>Supplier Purchases</ion-label>
-                </ion-item>
+                  <ion-item routerLink="/medicines" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="medkit-outline" slot="start"></ion-icon>
+                    <ion-label>Medicine Catalogue</ion-label>
+                  </ion-item>
 
-                <ion-item routerLink="/returns" routerLinkActive="active-item" class="nav-item">
-                  <ion-icon name="return-down-back-outline" slot="start"></ion-icon>
-                  <ion-label>Returns & Quarantine</ion-label>
-                </ion-item>
+                  <ion-item routerLink="/inventory" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="cube-outline" slot="start"></ion-icon>
+                    <ion-label>Inventory & FEFO</ion-label>
+                  </ion-item>
 
-                <ion-item routerLink="/reports" routerLinkActive="active-item" class="nav-item">
-                  <ion-icon name="document-text-outline" slot="start"></ion-icon>
-                  <ion-label>GST & Drug Reports</ion-label>
-                </ion-item>
+                  <ion-item routerLink="/purchases" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="bag-add-outline" slot="start"></ion-icon>
+                    <ion-label>Supplier Purchases</ion-label>
+                  </ion-item>
+
+                  <ion-item routerLink="/returns" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="return-down-back-outline" slot="start"></ion-icon>
+                    <ion-label>Returns & Quarantine</ion-label>
+                  </ion-item>
+
+                  <ion-item routerLink="/reports" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="document-text-outline" slot="start"></ion-icon>
+                    <ion-label>GST & Drug Reports</ion-label>
+                  </ion-item>
+                </ng-container>
               </ion-menu-toggle>
             </ion-list>
 
@@ -224,6 +252,8 @@ export class AppComponent {
       logOutOutline,
       businessOutline,
       personCircleOutline,
+      menuOutline,
+      menuSharp,
     });
   }
 }

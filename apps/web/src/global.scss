@@ -117,3 +117,24 @@ body {
     display: none !important;
   }
 }
+
+/* Wide Form Modals for Complex Inventory & Purchases Forms */
+ion-modal.large-form-modal {
+  --width: 960px;
+  --max-width: 95vw;
+  --height: 88vh;
+  --border-radius: 14px;
+}
+
+/* Global Fix to prevent floating input/select labels from truncating with ellipsis */
+ion-input, ion-select {
+  --highlight-color-focused: var(--ion-color-primary);
+}
+
+ion-input::part(label),
+ion-select::part(label) {
+  text-overflow: unset !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  font-size: 0.85rem !important;
+}

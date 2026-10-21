@@ -17,6 +17,8 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonMenuButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -48,23 +50,28 @@ import { ApiService } from '../../core/services/api.service';
     IonGrid,
     IonRow,
     IonCol,
+    IonMenuButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Pharmacy Regulatory & Tax Reports</ion-title>
+        <ion-buttons slot="start">
+          <ion-menu-button color="light"></ion-menu-button>
+        </ion-buttons>
+        <ion-title>Reports & Tax</ion-title>
       </ion-toolbar>
 
       <ion-toolbar>
         <ion-segment [(ngModel)]="activeTab" (ionChange)="loadData()">
           <ion-segment-button value="gst">
-            <ion-label>GSTR-1 Tax Summary</ion-label>
+            <ion-label>GST Summary</ion-label>
           </ion-segment-button>
           <ion-segment-button value="schedule-h1">
-            <ion-label>Schedule H1 & X Register</ion-label>
+            <ion-label>Schedule H1 & X</ion-label>
           </ion-segment-button>
           <ion-segment-button value="sales">
-            <ion-label>Sales Invoices History</ion-label>
+            <ion-label>Sales History</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>

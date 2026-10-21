@@ -64,7 +64,19 @@ async function main() {
     },
   });
 
-  // Assign roles
+  const superAdminUser = await prisma.user.upsert({
+    where: { email: 'superadmin@pharmapulse.io' },
+    update: { isSuperAdmin: true },
+    create: {
+      email: 'superadmin@pharmapulse.io',
+      fullName: 'PharmaPulse SaaS Super Admin',
+      passwordHash: defaultPassword,
+      phone: '+91 99999 00000',
+      isSuperAdmin: true,
+    },
+  });
+
+  // Assign store roles for store staff
   await prisma.userStoreRole.upsert({
     where: { userId_storeId: { userId: adminUser.id, storeId: store.id } },
     update: { role: UserRole.STORE_OWNER },
@@ -83,7 +95,12 @@ async function main() {
     create: { userId: cashierUser.id, storeId: store.id, role: UserRole.BILLING_OPERATOR },
   });
 
-  console.log('Staff accounts configured (admin, pharmacist, cashier)');
+  // Ensure Super Admin has NO store role linkage (pure SaaS Platform Administrator)
+  await prisma.userStoreRole.deleteMany({
+    where: { userId: superAdminUser.id },
+  });
+
+  console.log('Accounts configured: 1 SaaS Super Admin (Independent), 3 Store Staff');
 
   // 3. Register Supplier
   const supplier = await prisma.supplier.upsert({

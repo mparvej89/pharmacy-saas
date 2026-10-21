@@ -18,6 +18,8 @@ import {
   IonSelectOption,
   IonToast,
   IonSpinner,
+  IonMenuButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -52,11 +54,16 @@ import { ApiService } from '../../core/services/api.service';
     IonSelectOption,
     IonToast,
     IonSpinner,
+    IonMenuButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Sale Returns & Quarantine Inspection</ion-title>
+        <ion-buttons slot="start">
+          <ion-menu-button color="light"></ion-menu-button>
+        </ion-buttons>
+        <ion-title>Returns & Quarantine</ion-title>
       </ion-toolbar>
     </ion-header>
 

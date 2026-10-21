@@ -13,6 +13,7 @@ export interface UserSession {
   email: string;
   fullName: string;
   phone?: string;
+  isSuperAdmin?: boolean;
   activeStore: StoreInfo | null;
   stores: Array<{ id: string; name: string; code: string; role: string }>;
 }

@@ -33,6 +33,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User is inactive or no longer exists');
     }
 
+    if (user.isSuperAdmin) {
+      return {
+        userId: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        isSuperAdmin: true,
+        role: 'SUPER_ADMIN',
+        activeStoreId: payload.storeId || null,
+        storeRoles: user.storeRoles || [],
+      };
+    }
+
     const activeStoreId = payload.storeId || user.storeRoles[0]?.storeId;
     const activeRole = user.storeRoles.find((r) => r.storeId === activeStoreId)?.role;
 

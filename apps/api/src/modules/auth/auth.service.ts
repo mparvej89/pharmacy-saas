@@ -32,6 +32,37 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    // 1. Independent SaaS SUPER_ADMIN (Platform level, not bound to any clinic/store)
+    if (user.isSuperAdmin) {
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        storeId: null,
+        role: 'SUPER_ADMIN',
+        isSuperAdmin: true,
+      };
+
+      const accessToken = this.jwtService.sign(payload);
+
+      return {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          phone: user.phone,
+          isSuperAdmin: true,
+          activeStore: null,
+          stores: [],
+        },
+      };
+    }
+
+    // 2. Pharmacy Store Staff / Owner (Tied to specific clinic branches)
+    if (!user.storeRoles || user.storeRoles.length === 0) {
+      throw new UnauthorizedException('User account is not associated with any pharmacy store');
+    }
+
     // Default to the first active store
     const activeStoreRole = user.storeRoles.find((sr) => sr.store.isActive) || user.storeRoles[0];
     const activeStore = activeStoreRole?.store;
@@ -41,6 +72,7 @@ export class AuthService {
       email: user.email,
       storeId: activeStore?.id,
       role: activeStoreRole?.role,
+      isSuperAdmin: false,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -52,6 +84,7 @@ export class AuthService {
         email: user.email,
         fullName: user.fullName,
         phone: user.phone,
+        isSuperAdmin: false,
         activeStore: activeStore
           ? {
               id: activeStore.id,
@@ -89,6 +122,39 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    // Super Admin can switch context to any store globally
+    if (user.isSuperAdmin) {
+      const targetStore = await this.prisma.tenantStore.findUnique({
+        where: { id: selectStoreDto.storeId },
+      });
+      if (!targetStore) {
+        throw new ForbiddenException('Store not found');
+      }
+
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        storeId: targetStore.id,
+        role: 'SUPER_ADMIN',
+        isSuperAdmin: true,
+      };
+
+      const accessToken = this.jwtService.sign(payload);
+
+      return {
+        accessToken,
+        activeStore: {
+          id: targetStore.id,
+          name: targetStore.name,
+          code: targetStore.code,
+          gstin: targetStore.gstin,
+          drugLicenseNumber: targetStore.drugLicenseNumber,
+          stateCode: targetStore.stateCode,
+          role: 'SUPER_ADMIN',
+        },
+      };
+    }
+
     const targetMembership = user.storeRoles.find((sr) => sr.storeId === selectStoreDto.storeId);
     if (!targetMembership) {
       throw new ForbiddenException('User is not authorized for this pharmacy store');
@@ -99,6 +165,7 @@ export class AuthService {
       email: user.email,
       storeId: targetMembership.storeId,
       role: targetMembership.role,
+      isSuperAdmin: false,
     };
 
     const accessToken = this.jwtService.sign(payload);

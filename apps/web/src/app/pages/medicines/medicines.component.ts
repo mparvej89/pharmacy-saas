@@ -22,6 +22,8 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonMenuButton,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -63,10 +65,15 @@ import { Medicine } from '../../core/models';
     IonGrid,
     IonRow,
     IonCol,
+    IonMenuButton,
+    IonButtons,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+          <ion-menu-button color="light"></ion-menu-button>
+        </ion-buttons>
         <ion-title>Medicine Catalogue</ion-title>
         <ion-button slot="end" fill="solid" color="light" (click)="openAddModal()">
           <ion-icon name="add-outline" slot="start"></ion-icon>
@@ -369,6 +376,11 @@ import { Medicine } from '../../core/models';
         border: 1px solid #e2e8f0;
         background: #ffffff;
         margin: 0;
+        overflow: hidden;
+      }
+      .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
       .catalogue-table {
         width: 100%;

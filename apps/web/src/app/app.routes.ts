@@ -53,6 +53,12 @@ export const routes: Routes = [
       import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
   },
   {
+    path: 'stores',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/stores/stores.component').then((m) => m.StoresComponent),
+  },
+  {
     path: '**',
     redirectTo: 'dashboard',
   },
