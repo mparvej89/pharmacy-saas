@@ -26,6 +26,11 @@ export class InventoryService {
             prescriptionCategory: true,
             hsnCode: true,
             gstRate: true,
+            baseUnit: true,
+            purchaseUnit: true,
+            conversionFactor: true,
+            packSize: true,
+            unitOfMeasure: true,
           },
         },
       },
@@ -41,6 +46,12 @@ export class InventoryService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const medicine = this.prisma.medicine?.findFirst
+      ? await this.prisma.medicine.findFirst({
+          where: { id: medicineId, storeId },
+        })
+      : null;
+
     const batches = await this.prisma.medicineBatch.findMany({
       where: {
         storeId,
@@ -55,7 +66,7 @@ export class InventoryService {
     const totalAvailable = batches.reduce((sum, b) => sum + b.quantityAvailable, 0);
     if (totalAvailable < requiredQuantity) {
       throw new BadRequestException(
-        `Insufficient unexpired stock: Requested ${requiredQuantity}, but only ${totalAvailable} available`,
+        `Insufficient unexpired stock: Requested ${requiredQuantity} ${medicine?.baseUnit || 'units'}, but only ${totalAvailable} available`,
       );
     }
 
@@ -64,7 +75,12 @@ export class InventoryService {
       batchId: string;
       batchNumber: string;
       expiryDate: Date;
+      rackLocation: string | null;
       quantityToDeduct: number;
+      availableInBatch: number;
+      baseUnit: string;
+      purchaseUnit: string;
+      conversionFactor: number;
       sellingPrice: number;
       mrp: number;
     }> = [];
@@ -77,7 +93,12 @@ export class InventoryService {
         batchId: batch.id,
         batchNumber: batch.batchNumber,
         expiryDate: batch.expiryDate,
+        rackLocation: batch.rackLocation,
         quantityToDeduct: takeQty,
+        availableInBatch: batch.quantityAvailable,
+        baseUnit: medicine?.baseUnit || 'TABLET',
+        purchaseUnit: medicine?.purchaseUnit || 'STRIP',
+        conversionFactor: medicine?.conversionFactor || 1,
         sellingPrice: Number(batch.sellingPrice),
         mrp: Number(batch.mrp),
       });
@@ -107,6 +128,9 @@ export class InventoryService {
           genericName: med.genericName,
           brandName: med.brandName,
           reorderLevel: med.reorderLevel,
+          baseUnit: med.baseUnit,
+          purchaseUnit: med.purchaseUnit,
+          conversionFactor: med.conversionFactor,
           currentStock,
           deficit: Math.max(0, med.reorderLevel - currentStock),
           isLowStock: currentStock <= med.reorderLevel,
@@ -129,7 +153,15 @@ export class InventoryService {
       },
       include: {
         medicine: {
-          select: { id: true, name: true, genericName: true, brandName: true },
+          select: {
+            id: true,
+            name: true,
+            genericName: true,
+            brandName: true,
+            baseUnit: true,
+            purchaseUnit: true,
+            conversionFactor: true,
+          },
         },
       },
       orderBy: { expiryDate: 'asc' },
@@ -222,10 +254,45 @@ export class InventoryService {
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
       include: {
-        medicine: { select: { id: true, name: true, genericName: true } },
+        medicine: {
+          select: {
+            id: true,
+            name: true,
+            genericName: true,
+            baseUnit: true,
+            purchaseUnit: true,
+            conversionFactor: true,
+          },
+        },
         batch: { select: { id: true, batchNumber: true, expiryDate: true } },
         user: { select: { id: true, fullName: true } },
       },
     });
   }
+
+  async updateBatchRack(storeId: string, batchId: string, rackLocation: string) {
+    const batch = await this.prisma.medicineBatch.findFirst({
+      where: { id: batchId, storeId },
+    });
+
+    if (!batch) {
+      throw new NotFoundException(`Batch with ID "${batchId}" not found in current store`);
+    }
+
+    return this.prisma.medicineBatch.update({
+      where: { id: batchId },
+      data: { rackLocation: rackLocation.trim().toUpperCase() },
+      include: {
+        medicine: {
+          select: {
+            id: true,
+            name: true,
+            genericName: true,
+            brandName: true,
+          },
+        },
+      },
+    });
+  }
 }
+

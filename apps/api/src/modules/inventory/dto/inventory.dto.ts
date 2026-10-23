@@ -26,3 +26,11 @@ export class CreateAdjustmentDto {
   @IsNotEmpty()
   reason!: string;
 }
+
+export class UpdateBatchRackDto {
+  @ApiProperty({ example: 'A1-R2', description: 'Shelf or rack location identifier' })
+  @IsString()
+  @IsNotEmpty()
+  rackLocation!: string;
+}
+

@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
-import { CreateAdjustmentDto } from './dto/inventory.dto';
+import { CreateAdjustmentDto, UpdateBatchRackDto } from './dto/inventory.dto';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { StoreTenantGuard } from '@/common/guards/store-tenant.guard';
@@ -63,6 +63,17 @@ export class InventoryController {
     @Body() dto: CreateAdjustmentDto,
   ) {
     return this.inventoryService.createStockAdjustment(storeId, userId, dto);
+  }
+
+  @Patch('batches/:id/rack')
+  @Roles(UserRole.STORE_OWNER, UserRole.PHARMACIST, UserRole.INVENTORY_MANAGER, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Assign or update shelf/rack location for a batch' })
+  async updateBatchRack(
+    @CurrentStore() storeId: string,
+    @Param('id') batchId: string,
+    @Body() dto: UpdateBatchRackDto,
+  ) {
+    return this.inventoryService.updateBatchRack(storeId, batchId, dto.rackLocation);
   }
 
   @Get('ledger')

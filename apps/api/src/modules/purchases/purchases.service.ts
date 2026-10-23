@@ -74,33 +74,50 @@ export class PurchasesService {
 
     const purchaseNumber = `PO-${Date.now().toString().slice(-8)}`;
 
-    const itemData = createDto.items.map((item) => {
-      // Free quantity does NOT increase the line gross rate
-      const lineGross = new Decimal(item.quantity).times(item.purchaseRate);
-      const discount = lineGross.times(new Decimal(item.discountPercent).dividedBy(100));
-      const taxable = lineGross.minus(discount);
-      const tax = taxable.times(new Decimal(item.gstRate).dividedBy(100));
-      const net = taxable.plus(tax);
+    const itemData = await Promise.all(
+      createDto.items.map(async (item) => {
+        const medicine = await this.prisma.medicine.findFirst({
+          where: { id: item.medicineId, storeId },
+        });
 
-      subtotal = subtotal.plus(lineGross);
-      totalDiscount = totalDiscount.plus(discount);
-      totalTax = totalTax.plus(tax);
+        const conversionFactor = item.conversionFactor || (medicine?.conversionFactor) || 1;
+        const purchaseUnit = item.purchaseUnit || (medicine?.purchaseUnit) || 'STRIP';
+        const totalPacks = item.quantity + (item.freeQuantity || 0);
+        const freeLooseQuantity = item.freeLooseQuantity || 0;
+        const baseQuantity = (totalPacks * conversionFactor) + freeLooseQuantity;
 
-      return {
-        medicineId: item.medicineId,
-        batchNumber: item.batchNumber.trim().toUpperCase(),
-        expiryDate: new Date(item.expiryDate),
-        quantity: item.quantity,
-        freeQuantity: item.freeQuantity || 0,
-        purchaseRate: item.purchaseRate,
-        discountPercent: item.discountPercent || 0,
-        gstRate: item.gstRate,
-        taxAmount: tax.toDecimalPlaces(2).toNumber(),
-        netAmount: net.toDecimalPlaces(2).toNumber(),
-        mrp: item.mrp,
-        sellingPrice: item.sellingPrice,
-      };
-    });
+        // Free quantity and loose free items do NOT increase the line gross rate
+        const lineGross = new Decimal(item.quantity).times(item.purchaseRate);
+        const discount = lineGross.times(new Decimal(item.discountPercent).dividedBy(100));
+        const taxable = lineGross.minus(discount);
+        const tax = taxable.times(new Decimal(item.gstRate).dividedBy(100));
+        const net = taxable.plus(tax);
+
+        subtotal = subtotal.plus(lineGross);
+        totalDiscount = totalDiscount.plus(discount);
+        totalTax = totalTax.plus(tax);
+
+        return {
+          medicineId: item.medicineId,
+          batchNumber: item.batchNumber.trim().toUpperCase(),
+          expiryDate: new Date(item.expiryDate),
+          quantity: item.quantity,
+          freeQuantity: item.freeQuantity || 0,
+          freeLooseQuantity,
+          purchaseUnit,
+          conversionFactor,
+          baseQuantity,
+          purchaseRate: item.purchaseRate,
+          discountPercent: item.discountPercent || 0,
+          gstRate: item.gstRate,
+          taxAmount: tax.toDecimalPlaces(2).toNumber(),
+          netAmount: net.toDecimalPlaces(2).toNumber(),
+          mrp: item.mrp,
+          sellingPrice: item.sellingPrice,
+          rackLocation: item.rackLocation ? item.rackLocation.trim().toUpperCase() : null,
+        };
+      }),
+    );
 
     const totalAmount = subtotal.minus(totalDiscount).plus(totalTax);
 
@@ -147,7 +164,10 @@ export class PurchasesService {
       }
 
       for (const item of purchase.items) {
-        const totalReceived = item.quantity + item.freeQuantity;
+        const factor = (item as any).conversionFactor || 1;
+        const totalPacks = item.quantity + (item.freeQuantity || 0);
+        const freeLoose = (item as any).freeLooseQuantity || 0;
+        const totalBaseReceived = (item as any).baseQuantity || ((totalPacks * factor) + freeLoose);
 
         // Upsert batch
         let batch = await tx.medicineBatch.findUnique({
@@ -167,10 +187,11 @@ export class PurchasesService {
               medicineId: item.medicineId,
               batchNumber: item.batchNumber,
               expiryDate: item.expiryDate,
-              quantityAvailable: totalReceived,
+              quantityAvailable: totalBaseReceived,
               mrp: item.mrp,
               purchasePrice: item.purchaseRate,
               sellingPrice: item.sellingPrice,
+              rackLocation: item.rackLocation || null,
               status: 'ACTIVE',
             },
           });
@@ -178,10 +199,11 @@ export class PurchasesService {
           batch = await tx.medicineBatch.update({
             where: { id: batch.id },
             data: {
-              quantityAvailable: { increment: totalReceived },
+              quantityAvailable: { increment: totalBaseReceived },
               mrp: item.mrp,
               purchasePrice: item.purchaseRate,
               sellingPrice: item.sellingPrice,
+              ...(item.rackLocation ? { rackLocation: item.rackLocation } : {}),
               status: 'ACTIVE',
             },
           });
@@ -193,6 +215,7 @@ export class PurchasesService {
           data: { batchId: batch.id },
         });
 
+        const freeText = freeLoose > 0 ? ` + ${freeLoose} loose free` : '';
         // Create immutable StockLedgerEntry
         await tx.stockLedgerEntry.create({
           data: {
@@ -200,12 +223,12 @@ export class PurchasesService {
             medicineId: item.medicineId,
             batchId: batch.id,
             movementType: 'PURCHASE_RECEIPT',
-            quantityChange: totalReceived,
+            quantityChange: totalBaseReceived,
             balanceAfter: batch.quantityAvailable,
             referenceType: 'PURCHASE',
             referenceId: purchase.id,
             userId,
-            notes: `Purchase Receipt from ${purchase.supplierInvoiceNumber} (Qty: ${item.quantity} + Free: ${item.freeQuantity})`,
+            notes: `Purchase Receipt from ${purchase.supplierInvoiceNumber} (Packs: ${item.quantity}+${item.freeQuantity} ${(item as any).purchaseUnit || 'pack'} @ ${factor}/pack${freeText} = ${totalBaseReceived} base units)`,
           },
         });
       }
@@ -225,6 +248,83 @@ export class PurchasesService {
           status: 'POSTED',
           postedAt: new Date(),
           postedById: userId,
+        },
+        include: {
+          items: true,
+          supplier: true,
+        },
+      });
+    });
+  }
+
+  async cancelPurchase(storeId: string, id: string, userId: string, reason?: string) {
+    const purchase = await this.findOne(storeId, id);
+
+    if (purchase.status === 'CANCELLED') {
+      throw new BadRequestException('Purchase invoice is already cancelled');
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // If purchase was already POSTED, reverse the batches and ledger
+      if (purchase.status === 'POSTED') {
+        for (const item of purchase.items) {
+          const factor = (item as any).conversionFactor || 1;
+          const totalPacks = item.quantity + (item.freeQuantity || 0);
+          const totalBaseReceived = (item as any).baseQuantity || (totalPacks * factor);
+
+          if (item.batchId) {
+            const batch = await tx.medicineBatch.findUnique({
+              where: { id: item.batchId },
+            });
+
+            if (batch) {
+              if (batch.quantityAvailable < totalBaseReceived) {
+                throw new BadRequestException(
+                  `Cannot cancel purchase: ${totalBaseReceived - batch.quantityAvailable} units of batch "${batch.batchNumber}" have already been sold or dispensed`,
+                );
+              }
+
+              const updatedBatch = await tx.medicineBatch.update({
+                where: { id: batch.id },
+                data: {
+                  quantityAvailable: { decrement: totalBaseReceived },
+                },
+              });
+
+              // Write reversing stock ledger entry
+              await tx.stockLedgerEntry.create({
+                data: {
+                  storeId,
+                  medicineId: item.medicineId,
+                  batchId: batch.id,
+                  movementType: 'STOCK_ADJUSTMENT',
+                  quantityChange: -totalBaseReceived,
+                  balanceAfter: updatedBatch.quantityAvailable,
+                  referenceType: 'PURCHASE',
+                  referenceId: purchase.id,
+                  userId,
+                  notes: `Purchase Cancellation Reversal: ${purchase.supplierInvoiceNumber} (Reason: ${reason || 'N/A'})`,
+                },
+              });
+            }
+          }
+        }
+
+        // Revert supplier outstanding balance
+        await tx.supplier.update({
+          where: { id: purchase.supplierId },
+          data: {
+            outstandingBalance: { decrement: purchase.totalAmount },
+          },
+        });
+      }
+
+      // Mark purchase status as CANCELLED
+      return tx.purchase.update({
+        where: { id: purchase.id },
+        data: {
+          status: 'CANCELLED',
+          notes: purchase.notes ? `${purchase.notes} | Cancelled: ${reason || 'N/A'}` : `Cancelled: ${reason || 'N/A'}`,
         },
         include: {
           items: true,

@@ -4,6 +4,7 @@ import {
   Post,
   Put,
   Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -42,6 +43,30 @@ export class MedicinesController {
     return this.medicinesService.findAll(storeId, { search, category, page, limit });
   }
 
+  @Get('packaging-preview')
+  @ApiOperation({ summary: 'Calculate automatic unit conversions and packaging preview based on dosage form' })
+  async getPackagingPreview(
+    @Query('dosageForm') dosageForm: any,
+    @Query('unitsPerPack') unitsPerPack?: number,
+    @Query('boxPackaging') boxPackaging?: boolean,
+    @Query('stripsPerBox') stripsPerBox?: number,
+    @Query('sellingPricePerPack') sellingPricePerPack?: number,
+    @Query('unitSellingPriceManual') unitSellingPriceManual?: number,
+    @Query('packageVolume') packageVolume?: number,
+    @Query('allowPartialDispensing') allowPartialDispensing?: boolean,
+  ) {
+    return this.medicinesService.getPackagingPreview({
+      dosageForm,
+      unitsPerPack: unitsPerPack ? Number(unitsPerPack) : undefined,
+      boxPackaging: String(boxPackaging) === 'true',
+      stripsPerBox: stripsPerBox ? Number(stripsPerBox) : undefined,
+      sellingPricePerPack: sellingPricePerPack ? Number(sellingPricePerPack) : undefined,
+      unitSellingPriceManual: unitSellingPriceManual ? Number(unitSellingPriceManual) : undefined,
+      packageVolume: packageVolume ? Number(packageVolume) : undefined,
+      allowPartialDispensing: String(allowPartialDispensing) === 'true',
+    });
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get medicine by ID with active batches' })
   async findOne(@CurrentStore() storeId: string, @Param('id') id: string) {
@@ -77,5 +102,12 @@ export class MedicinesController {
   @ApiOperation({ summary: 'Toggle active/inactive status of a medicine' })
   async toggleStatus(@CurrentStore() storeId: string, @Param('id') id: string) {
     return this.medicinesService.toggleStatus(storeId, id);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.STORE_OWNER, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Delete or archive medicine from catalogue' })
+  async remove(@CurrentStore() storeId: string, @Param('id') id: string) {
+    return this.medicinesService.remove(storeId, id);
   }
 }

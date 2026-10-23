@@ -54,4 +54,48 @@ export class SuppliersService {
       data: updateDto,
     });
   }
+
+  async recordPayment(
+    storeId: string,
+    id: string,
+    userId: string,
+    dto: { amount: number; paymentMethod: string; referenceNumber?: string; notes?: string },
+  ) {
+    const supplier = await this.findOne(storeId, id);
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedSupplier = await tx.supplier.update({
+        where: { id },
+        data: {
+          outstandingBalance: { decrement: dto.amount },
+        },
+      });
+
+      // Record audit log for immutable financial traceability
+      await tx.auditLog.create({
+        data: {
+          storeId,
+          userId,
+          action: 'SUPPLIER_PAYMENT',
+          entityName: 'SUPPLIER',
+          entityId: id,
+          newValues: {
+            amountPaid: dto.amount,
+            paymentMethod: dto.paymentMethod,
+            referenceNumber: dto.referenceNumber,
+            notes: dto.notes,
+            previousBalance: Number(supplier.outstandingBalance),
+            newBalance: Number(updatedSupplier.outstandingBalance),
+          },
+        },
+      });
+
+      return {
+        message: 'Supplier payment recorded successfully',
+        supplierId: id,
+        amountPaid: dto.amount,
+        remainingBalance: updatedSupplier.outstandingBalance,
+      };
+    });
+  }
 }

@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { StoreTenantGuard } from '@/common/guards/store-tenant.guard';
 import { CurrentStore } from '@/common/decorators/current-store.decorator';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 
@@ -44,5 +45,17 @@ export class SuppliersController {
     @Body() updateDto: UpdateSupplierDto,
   ) {
     return this.suppliersService.update(storeId, id, updateDto);
+  }
+
+  @Post(':id/payments')
+  @Roles(UserRole.STORE_OWNER, UserRole.INVENTORY_MANAGER, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Record payment voucher to supplier and reduce outstanding balance' })
+  async recordPayment(
+    @CurrentStore() storeId: string,
+    @Param('id') id: string,
+    @CurrentUser('userId') userId: string,
+    @Body() dto: any,
+  ) {
+    return this.suppliersService.recordPayment(storeId, id, userId, dto);
   }
 }

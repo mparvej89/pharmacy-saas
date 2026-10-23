@@ -23,6 +23,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/pos/pos.component').then((m) => m.PosComponent),
   },
   {
+    path: 'sales-history',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/sales-history/sales-history.component').then((m) => m.SalesHistoryComponent),
+  },
+  {
     path: 'medicines',
     canActivate: [authGuard],
     loadComponent: () =>
@@ -51,6 +57,24 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
+  },
+  {
+    path: 'banking',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/banking/banking.component').then((m) => m.BankingComponent),
+  },
+  {
+    path: 'accounts',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/accounts/accounts.component').then((m) => m.AccountsComponent),
+  },
+  {
+    path: 'customers',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/customers/customers.component').then((m) => m.CustomersComponent),
   },
   {
     path: 'stores',

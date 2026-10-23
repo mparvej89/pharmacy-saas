@@ -29,8 +29,30 @@ export class ApiService {
     return this.http.post<Medicine>(`${this.baseUrl}/medicines`, data);
   }
 
+  updateMedicine(id: string, data: any): Observable<Medicine> {
+    return this.http.put<Medicine>(`${this.baseUrl}/medicines/${id}`, data);
+  }
+
+  toggleMedicineStatus(id: string): Observable<Medicine> {
+    return this.http.patch<Medicine>(`${this.baseUrl}/medicines/${id}/toggle-status`, {});
+  }
+
+  deleteMedicine(id: string): Observable<{ success: boolean; softDeleted: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; softDeleted: boolean; message: string }>(`${this.baseUrl}/medicines/${id}`);
+  }
+
   checkDuplicateMedicine(data: { name: string; barcode?: string; excludeId?: string }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/medicines/check-duplicate`, data);
+  }
+
+  getPackagingPreview(params: any): Observable<any> {
+    let httpParams = new HttpParams();
+    Object.keys(params).forEach((key) => {
+      if (params[key] !== undefined && params[key] !== null) {
+        httpParams = httpParams.set(key, params[key].toString());
+      }
+    });
+    return this.http.get<any>(`${this.baseUrl}/medicines/packaging-preview`, { params: httpParams });
   }
 
   // ----------------- INVENTORY & FEFO -----------------
@@ -56,6 +78,10 @@ export class ApiService {
 
   createAdjustment(data: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/inventory/adjustments`, data);
+  }
+
+  updateBatchRack(batchId: string, rackLocation: string): Observable<any> {
+    return this.http.patch<any>(`${this.baseUrl}/inventory/batches/${batchId}/rack`, { rackLocation });
   }
 
   getStockLedger(params?: { medicineId?: string; batchId?: string; limit?: number }): Observable<any[]> {
@@ -84,6 +110,16 @@ export class ApiService {
     return this.http.get<any>(`${this.baseUrl}/sales/${id}`);
   }
 
+  getInvoicePrintUrl(id: string, format: 'a4' | 'thermal' = 'a4'): string {
+    return `${this.baseUrl}/sales/${id}/print?format=${format}`;
+  }
+
+  getInvoicePrintHtml(id: string, format: 'a4' | 'thermal' = 'a4'): Observable<string> {
+    return this.http.get(`${this.baseUrl}/sales/${id}/print?format=${format}`, {
+      responseType: 'text',
+    });
+  }
+
   // ----------------- PURCHASES -----------------
   getPurchases(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/purchases`);
@@ -101,6 +137,29 @@ export class ApiService {
     return this.http.post<any>(`${this.baseUrl}/purchases/${id}/post`, {});
   }
 
+  cancelPurchase(id: string, reason?: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/purchases/${id}/cancel`, { reason });
+  }
+
+  // ----------------- CUSTOMERS & PATIENTS -----------------
+  getCustomers(search?: string): Observable<any[]> {
+    let params = new HttpParams();
+    if (search) params = params.set('search', search);
+    return this.http.get<any[]>(`${this.baseUrl}/customers`, { params });
+  }
+
+  getCustomer(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/customers/${id}`);
+  }
+
+  createCustomer(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/customers`, data);
+  }
+
+  updateCustomer(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/customers/${id}`, data);
+  }
+
   // ----------------- SUPPLIERS -----------------
   getSuppliers(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/suppliers`);
@@ -110,9 +169,17 @@ export class ApiService {
     return this.http.post<any>(`${this.baseUrl}/suppliers`, data);
   }
 
+  recordSupplierPayment(supplierId: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/suppliers/${supplierId}/payments`, data);
+  }
+
   // ----------------- RETURNS & QUARANTINE -----------------
   getReturns(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/returns`);
+  }
+
+  getReturn(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/returns/${id}`);
   }
 
   processReturn(data: any): Observable<any> {
@@ -150,4 +217,90 @@ export class ApiService {
   createStore(data: any): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/stores`, data);
   }
+
+  // ----------------- CASH & BANK MANAGEMENT -----------------
+  getBankDashboard(startDate?: string, endDate?: string): Observable<any> {
+    let params = new HttpParams();
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+    return this.http.get<any>(`${this.baseUrl}/banking/dashboard`, { params });
+  }
+
+  getBankAccounts(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/banking/accounts`);
+  }
+
+  createBankAccount(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/banking/accounts`, data);
+  }
+
+  updateBankAccount(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/banking/accounts/${id}`, data);
+  }
+
+  deleteBankAccount(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/banking/accounts/${id}`);
+  }
+
+  getBankTransactions(query?: {
+    accountId?: string;
+    transactionType?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+  }): Observable<any[]> {
+    let params = new HttpParams();
+    if (query?.accountId) params = params.set('accountId', query.accountId);
+    if (query?.transactionType) params = params.set('transactionType', query.transactionType);
+    if (query?.startDate) params = params.set('startDate', query.startDate);
+    if (query?.endDate) params = params.set('endDate', query.endDate);
+    if (query?.limit) params = params.set('limit', query.limit.toString());
+    return this.http.get<any[]>(`${this.baseUrl}/banking/transactions`, { params });
+  }
+
+  postBankTransaction(data: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/banking/transactions`, data);
+  }
+
+  reverseBankTransaction(id: string, reason: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/banking/transactions/${id}/reverse`, { reason });
+  }
+
+  getBankReconciliation(accountId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/banking/reconciliation/${accountId}`);
+  }
+
+  importBankStatement(data: { accountId: string; entries: any[] }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/banking/statement/import`, data);
+  }
+
+  matchBankStatement(data: { statementId: string; transactionId?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/banking/statement/match`, data);
+  }
+
+  unmatchBankStatement(statementId: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/banking/statement/${statementId}/unmatch`, {});
+  }
+
+  getCashClosingStatus(dateStr?: string): Observable<any> {
+    let params = new HttpParams();
+    if (dateStr) params = params.set('date', dateStr);
+    return this.http.get<any>(`${this.baseUrl}/banking/cash-closing/status`, { params });
+  }
+
+  submitDailyCashClosing(data: {
+    accountId: string;
+    physicalCashCounted: number;
+    closingDate?: string;
+    notes?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/banking/cash-closing`, data);
+  }
+
+  reopenDailyCashClosing(dateStr?: string): Observable<any> {
+    let params = new HttpParams();
+    if (dateStr) params = params.set('date', dateStr);
+    return this.http.post<any>(`${this.baseUrl}/banking/cash-closing/reopen`, {}, { params });
+  }
 }
+

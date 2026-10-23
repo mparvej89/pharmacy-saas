@@ -49,4 +49,16 @@ export class PurchasesController {
   ) {
     return this.purchasesService.postPurchase(storeId, id, userId);
   }
+
+  @Post(':id/cancel')
+  @Roles(UserRole.STORE_OWNER, UserRole.INVENTORY_MANAGER, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Cancel purchase draft or reverse posted purchase batches safely' })
+  async cancelPurchase(
+    @CurrentStore() storeId: string,
+    @Param('id') id: string,
+    @CurrentUser('userId') userId: string,
+    @Body('reason') reason?: string,
+  ) {
+    return this.purchasesService.cancelPurchase(storeId, id, userId, reason);
+  }
 }

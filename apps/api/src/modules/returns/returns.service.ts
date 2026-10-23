@@ -147,6 +147,57 @@ export class ReturnsService {
         },
       });
 
+      // Post Cash/Bank outflow transaction for refund if totalRefund > 0
+      if (totalRefund.greaterThan(0)) {
+        try {
+          let targetType = 'CASH';
+          if (dto.refundMethod === 'UPI') {
+            targetType = 'UPI_SETTLEMENT';
+          } else if (dto.refundMethod === 'CARD' || dto.refundMethod === 'CHEQUE') {
+            targetType = 'BANK';
+          }
+
+          let account = await tx.cashBankAccount.findFirst({
+            where: { storeId, accountType: targetType as any, isActive: true },
+            orderBy: { isDefault: 'desc' },
+          });
+
+          if (!account) {
+            account = await tx.cashBankAccount.findFirst({
+              where: { storeId, accountType: 'CASH' as any, isActive: true },
+            });
+          }
+
+          if (account) {
+            const refundAmt = totalRefund.toDecimalPlaces(2).toNumber();
+            const updatedAcc = await tx.cashBankAccount.update({
+              where: { id: account.id },
+              data: { currentBalance: { decrement: refundAmt } },
+            });
+
+            await tx.cashBankTransaction.create({
+              data: {
+                storeId,
+                accountId: account.id,
+                transactionDate: new Date(),
+                transactionType: 'REFUND' as any,
+                amount: refundAmt,
+                balanceAfter: updatedAcc.currentBalance,
+                paymentMethod: dto.refundMethod,
+                referenceNumber: returnNumber,
+                partyName: (sale as any).patientName || 'Customer',
+                narration: `Sale Return Refund: ${returnNumber} (${sale.invoiceNumber})`,
+                category: 'CUSTOMER_REFUND',
+                relatedSaleId: sale.id,
+                createdById: userId,
+              },
+            });
+          }
+        } catch (e) {
+          // If cash/bank accounts aren't configured yet, avoid breaking return creation
+        }
+      }
+
       return saleReturn;
     });
   }

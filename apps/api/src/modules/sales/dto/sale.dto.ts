@@ -33,6 +33,23 @@ export class SaleLineItemDto {
   @Min(1)
   quantity!: number;
 
+  @ApiProperty({ example: 'STRIP', required: false, default: 'STRIP' })
+  @IsOptional()
+  @IsString()
+  saleUnit?: string;
+
+  @ApiProperty({ example: 10, required: false, default: 1 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  conversionFactor?: number;
+
+  @ApiProperty({ example: 13.00, required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  unitPrice?: number;
+
   @ApiProperty({ example: 0.0, default: 0.0, required: false })
   @IsOptional()
   @IsNumber()

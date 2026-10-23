@@ -37,6 +37,23 @@ export class PurchaseItemDto {
   @Min(0)
   freeQuantity!: number;
 
+  @ApiProperty({ example: 1, default: 0, required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  freeLooseQuantity?: number;
+
+  @ApiProperty({ example: 'STRIP', required: false, default: 'STRIP' })
+  @IsOptional()
+  @IsString()
+  purchaseUnit?: string;
+
+  @ApiProperty({ example: 10, required: false, default: 10 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  conversionFactor?: number;
+
   @ApiProperty({ example: 45.00 })
   @IsNumber()
   @Min(0)
@@ -61,6 +78,11 @@ export class PurchaseItemDto {
   @IsNumber()
   @Min(0)
   sellingPrice!: number;
+
+  @ApiProperty({ example: 'A1-R2', required: false })
+  @IsOptional()
+  @IsString()
+  rackLocation?: string;
 }
 
 export class CreatePurchaseDto {

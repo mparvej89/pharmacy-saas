@@ -73,6 +73,9 @@ import { AuthService } from '../../core/services/auth.service';
               <ion-item lines="inset" class="custom-input-item">
                 <ion-icon name="mail-outline" slot="start" color="medium"></ion-icon>
                 <ion-input
+                  id="login-email"
+                  name="email"
+                  autocomplete="username"
                   formControlName="email"
                   type="email"
                   label="Email Address"
@@ -87,6 +90,9 @@ import { AuthService } from '../../core/services/auth.service';
               <ion-item lines="inset" class="custom-input-item ion-margin-top">
                 <ion-icon name="lock-closed-outline" slot="start" color="medium"></ion-icon>
                 <ion-input
+                  id="login-password"
+                  name="password"
+                  autocomplete="current-password"
                   formControlName="password"
                   type="password"
                   label="Password"

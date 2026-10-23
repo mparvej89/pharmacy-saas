@@ -154,11 +154,18 @@ export class ReportsService {
       status: { in: ['COMPLETED', 'RETURNED_PARTIAL'] },
     };
 
-    if (startDate && endDate) {
-      where.saleDate = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
-      };
+    if (startDate || endDate) {
+      where.saleDate = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.saleDate.gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.saleDate.lte = end;
+      }
     }
 
     const sales = await this.prisma.sale.findMany({
@@ -234,11 +241,18 @@ export class ReportsService {
       status: { in: ['COMPLETED', 'RETURNED_PARTIAL'] },
     };
 
-    if (startDate && endDate) {
-      where.saleDate = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
-      };
+    if (startDate || endDate) {
+      where.saleDate = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        where.saleDate.gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.saleDate.lte = end;
+      }
     }
 
     const sales = await this.prisma.sale.findMany({

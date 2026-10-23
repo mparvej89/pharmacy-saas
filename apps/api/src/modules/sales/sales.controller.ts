@@ -39,6 +39,17 @@ export class SalesController {
     return this.salesService.findOne(storeId, id);
   }
 
+  @Get(':id/print')
+  @ApiOperation({ summary: 'Get printable GST tax invoice (HTML) in thermal or A4 format' })
+  @ApiQuery({ name: 'format', required: false, enum: ['a4', 'thermal'] })
+  async printInvoice(
+    @CurrentStore() storeId: string,
+    @Param('id') id: string,
+    @Query('format') format?: 'thermal' | 'a4',
+  ) {
+    return this.salesService.generateInvoiceHtml(storeId, id, format || 'a4');
+  }
+
   @Post('checkout')
   @ApiOperation({ summary: 'Atomically checkout POS invoice with FEFO allocation and GST tax breakdown' })
   async checkout(
@@ -47,5 +58,16 @@ export class SalesController {
     @Body() dto: CreateSaleDto,
   ) {
     return this.salesService.checkout(storeId, cashierId, dto);
+  }
+
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel a finalized sales invoice and restore batch stock' })
+  async cancelSale(
+    @CurrentStore() storeId: string,
+    @CurrentUser('userId') cashierId: string,
+    @Param('id') id: string,
+    @Body('reason') reason?: string,
+  ) {
+    return this.salesService.cancelSale(storeId, id, cashierId, reason);
   }
 }

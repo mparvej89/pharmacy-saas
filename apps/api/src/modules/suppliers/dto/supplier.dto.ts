@@ -52,10 +52,11 @@ export class CreateSupplierDto {
   @IsString()
   pincode?: string;
 
-  @ApiProperty({ example: 30, default: 30 })
+  @ApiProperty({ example: 30, default: 30, required: false })
+  @IsOptional()
   @IsInt()
   @Min(0)
-  paymentTermsDays!: number;
+  paymentTermsDays?: number = 30;
 }
 
 export class UpdateSupplierDto {
@@ -99,4 +100,25 @@ export class UpdateSupplierDto {
   @IsInt()
   @Min(0)
   paymentTermsDays?: number;
+}
+
+export class RecordSupplierPaymentDto {
+  @ApiProperty({ example: 5000.0 })
+  @IsNotEmpty()
+  amount!: number;
+
+  @ApiProperty({ example: 'BANK_TRANSFER', enum: ['CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE'] })
+  @IsNotEmpty()
+  @IsString()
+  paymentMethod!: string;
+
+  @ApiProperty({ example: 'CHQ-982134 / UTR-49120', required: false })
+  @IsOptional()
+  @IsString()
+  referenceNumber?: string;
+
+  @ApiProperty({ example: 'Payment against Invoice INV-SUP-2026-01', required: false })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

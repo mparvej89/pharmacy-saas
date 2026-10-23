@@ -98,6 +98,34 @@ enum ReturnDisposition {
   RESTOCKED_AFTER_INSPECTION
 }
 
+enum BankAccountType {
+  CASH
+  BANK
+  UPI_SETTLEMENT
+  CHEQUE
+  OTHER
+}
+
+enum BankTransactionType {
+  RECEIPT
+  PAYMENT
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  CUSTOMER_COLLECTION
+  SUPPLIER_PAYMENT
+  EXPENSE
+  REFUND
+  OPENING_BALANCE
+  CONTRA_TRANSFER
+}
+
+enum StatementMatchStatus {
+  UNMATCHED
+  MATCHED
+  MANUALLY_RECONCILED
+}
+
 // -------------------------------------------------------------
 // MODELS
 // -------------------------------------------------------------
@@ -132,6 +160,10 @@ model TenantStore {
   stockAdjustments   StockAdjustment[]
   auditLogs          AuditLog[]
   payments           Payment[]
+  bankAccounts       CashBankAccount[]
+  bankTransactions   CashBankTransaction[]
+  bankStatements     BankStatementEntry[]
+  cashClosings       DailyCashClosing[]
 
   @@map("tenant_stores")
 }
@@ -154,6 +186,9 @@ model User {
   adjustments  StockAdjustment[]
   ledgerEntries StockLedgerEntry[]
   auditLogs    AuditLog[]
+  bankTransactions CashBankTransaction[]
+  reconciledStatements BankStatementEntry[]
+  cashClosings DailyCashClosing[]
 
   @@map("users")
 }
@@ -184,6 +219,15 @@ model Medicine {
   dosageForm           DosageForm           @default(TABLET)
   packSize             Int                  @default(10)
   unitOfMeasure        String               @default("STRIP")
+  baseUnit             String               @default("TABLET")
+  purchaseUnit         String               @default("STRIP")
+  conversionFactor     Int                  @default(10)
+  unitSellingPrice     Decimal?             @db.Decimal(12, 2)
+  isStripPriced        Boolean              @default(true)
+  boxPackaging         Boolean              @default(false)
+  stripsPerBox         Int?
+  packageVolume        Decimal?             @db.Decimal(10, 2)
+  allowPartialDispensing Boolean            @default(false)
   hsnCode              String               @default("3004")
   gstRate              Decimal              @default(12.00) @db.Decimal(5, 2)
   prescriptionCategory PrescriptionCategory @default(OTC)
@@ -306,6 +350,10 @@ model PurchaseItem {
   expiryDate      DateTime      @db.Date
   quantity        Int
   freeQuantity    Int           @default(0)
+  freeLooseQuantity Int         @default(0)
+  purchaseUnit    String?       @default("STRIP")
+  conversionFactor Int          @default(1)
+  baseQuantity    Int?
   purchaseRate    Decimal       @db.Decimal(12, 2)
   discountPercent Decimal       @default(0.00) @db.Decimal(5, 2)
   gstRate         Decimal       @db.Decimal(5, 2)
@@ -313,6 +361,7 @@ model PurchaseItem {
   netAmount       Decimal       @db.Decimal(12, 2)
   mrp             Decimal       @db.Decimal(12, 2)
   sellingPrice    Decimal       @db.Decimal(12, 2)
+  rackLocation    String?
 
   purchase        Purchase      @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   medicine        Medicine      @relation(fields: [medicineId], references: [id])
@@ -387,6 +436,9 @@ model SaleItem {
   medicineId     String
   batchId        String
   quantity       Int
+  saleUnit       String?         @default("STRIP")
+  conversionFactor Int           @default(1)
+  baseQuantity   Int?
   unitPrice      Decimal         @db.Decimal(12, 2)
   mrp            Decimal         @db.Decimal(12, 2)
   discountPercent Decimal        @default(0.00) @db.Decimal(5, 2)
@@ -524,4 +576,124 @@ model AuditLog {
 
   @@index([storeId, timestamp])
   @@map("audit_logs")
+}
+
+// -------------------------------------------------------------
+// CASH & BANK MANAGEMENT MODELS
+// -------------------------------------------------------------
+
+model CashBankAccount {
+  id              String          @id @default(uuid())
+  storeId         String
+  accountName     String
+  accountType     BankAccountType @default(BANK)
+  accountNumber   String?         // Masked/last 4 or official account no (no secrets)
+  bankName        String?
+  ifscCode        String?
+  branchName      String?
+  upiId           String?
+  openingBalance  Decimal         @default(0.00) @db.Decimal(14, 2)
+  openingDate     DateTime        @default(now()) @db.Date
+  currentBalance  Decimal         @default(0.00) @db.Decimal(14, 2) // Cached for fast UI, verified against ledger
+  isDefault       Boolean         @default(false)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  store           TenantStore     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  transactions    CashBankTransaction[]
+  statements      BankStatementEntry[]
+  cashClosings    DailyCashClosing[]
+
+  @@unique([storeId, accountName])
+  @@index([storeId, accountType])
+  @@map("cash_bank_accounts")
+}
+
+model CashBankTransaction {
+  id                  String              @id @default(uuid())
+  storeId             String
+  accountId           String
+  transactionDate     DateTime            @default(now())
+  transactionType     BankTransactionType
+  amount              Decimal             @db.Decimal(14, 2)
+  balanceAfter        Decimal             @db.Decimal(14, 2)
+  paymentMethod       PaymentMethod       @default(CASH)
+  referenceNumber     String?             // UTR, Cheque No, Invoice No
+  partyName           String?             // Customer / Supplier / Payee / Beneficiary
+  narration           String
+  category            String?             // Rent, Salary, Utility, Electricity, Direct Sale, etc.
+  transferAccountId   String?             // Linked account for CONTRA transfers
+  relatedSaleId       String?
+  relatedPurchaseId   String?
+  relatedSupplierId   String?
+  relatedCustomerId   String?
+  isReversed          Boolean             @default(false)
+  reversedAt          DateTime?
+  reversalReason      String?
+  reversalTxId        String?
+  createdById         String
+  createdAt           DateTime            @default(now())
+
+  store               TenantStore         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  account             CashBankAccount     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdBy           User                @relation(fields: [createdById], references: [id])
+  matchedStatements   BankStatementEntry[]
+
+  @@index([storeId, transactionDate])
+  @@index([storeId, accountId, transactionDate])
+  @@index([storeId, transactionType])
+  @@map("cash_bank_transactions")
+}
+
+model BankStatementEntry {
+  id                    String                @id @default(uuid())
+  storeId               String
+  accountId             String
+  statementDate         DateTime              @db.Date
+  description           String
+  referenceNumber       String?               // Bank Ref / UTR / Cheque
+  withdrawalAmount      Decimal               @default(0.00) @db.Decimal(14, 2) // Debit from bank
+  depositAmount         Decimal               @default(0.00) @db.Decimal(14, 2) // Credit into bank
+  bankBalance           Decimal?              @db.Decimal(14, 2)
+  status                StatementMatchStatus  @default(UNMATCHED)
+  matchedTransactionId  String?
+  matchedAt             DateTime?
+  matchedById           String?
+  createdAt             DateTime              @default(now())
+
+  store                 TenantStore           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  account               CashBankAccount       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  matchedTransaction    CashBankTransaction?  @relation(fields: [matchedTransactionId], references: [id], onDelete: SetNull)
+  matchedBy             User?                 @relation(fields: [matchedById], references: [id], onDelete: SetNull)
+
+  @@index([storeId, accountId, statementDate])
+  @@index([storeId, status])
+  @@map("bank_statement_entries")
+}
+
+model DailyCashClosing {
+  id                  String          @id @default(uuid())
+  storeId             String
+  accountId           String          // Primary Cash in Hand account
+  closingDate         DateTime        @db.Date
+  openingCash         Decimal         @db.Decimal(14, 2)
+  cashReceipts        Decimal         @default(0.00) @db.Decimal(14, 2)
+  cashPayments        Decimal         @default(0.00) @db.Decimal(14, 2)
+  expectedCash        Decimal         @db.Decimal(14, 2)
+  physicalCashCounted Decimal         @db.Decimal(14, 2)
+  differenceAmount    Decimal         @db.Decimal(14, 2) // physical - expected (negative = shortage, positive = excess)
+  notes               String?
+  status              String          @default("CLOSED") // CLOSED, ADJUSTED
+  closedById          String
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  store               TenantStore     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  account             CashBankAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  closedBy            User            @relation(fields: [closedById], references: [id])
+
+  @@unique([storeId, accountId, closingDate])
+  @@index([storeId, closingDate])
+  @@map("daily_cash_closings")
 }

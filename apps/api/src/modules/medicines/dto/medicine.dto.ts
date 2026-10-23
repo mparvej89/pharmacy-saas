@@ -49,6 +49,48 @@ export class CreateMedicineDto {
   @IsString()
   unitOfMeasure!: string;
 
+  @ApiProperty({ example: 'TABLET', default: 'TABLET', required: false })
+  @IsOptional()
+  @IsString()
+  baseUnit?: string;
+
+  @ApiProperty({ example: 'STRIP', default: 'STRIP', required: false })
+  @IsOptional()
+  @IsString()
+  purchaseUnit?: string;
+
+  @ApiProperty({ example: 10, default: 10, required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  conversionFactor?: number;
+
+  @ApiProperty({ example: 3.20, required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  unitSellingPrice?: number;
+
+  @ApiProperty({ example: false, default: false, required: false })
+  @IsOptional()
+  boxPackaging?: boolean;
+
+  @ApiProperty({ example: 10, required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  stripsPerBox?: number;
+
+  @ApiProperty({ example: 100.0, required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  packageVolume?: number;
+
+  @ApiProperty({ example: false, default: false, required: false })
+  @IsOptional()
+  allowPartialDispensing?: boolean;
+
   @ApiProperty({ example: '3004', default: '3004' })
   @IsString()
   hsnCode!: string;
@@ -133,6 +175,48 @@ export class UpdateMedicineDto {
   @IsOptional()
   @IsString()
   unitOfMeasure?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  baseUnit?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  purchaseUnit?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  conversionFactor?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  unitSellingPrice?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  boxPackaging?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  stripsPerBox?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  packageVolume?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  allowPartialDispensing?: boolean;
 
   @ApiProperty({ required: false })
   @IsOptional()

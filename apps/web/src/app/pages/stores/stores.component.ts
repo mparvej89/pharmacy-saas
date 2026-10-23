@@ -194,6 +194,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12" sizeMd="8">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-name"
+                        name="name"
                         label="Store Name *"
                         labelPlacement="floating"
                         formControlName="name"
@@ -204,6 +206,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12" sizeMd="4">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-code"
+                        name="code"
                         label="Store Code *"
                         labelPlacement="floating"
                         formControlName="code"
@@ -217,6 +221,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12" sizeMd="6">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-dl"
+                        name="drugLicenseNumber"
                         label="Drug License Number (Form 20B/21B) *"
                         labelPlacement="floating"
                         formControlName="drugLicenseNumber"
@@ -227,6 +233,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12" sizeMd="6">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-gstin"
+                        name="gstin"
                         label="15-digit GSTIN *"
                         labelPlacement="floating"
                         formControlName="gstin"
@@ -240,6 +248,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-address"
+                        name="address"
                         label="Physical Address *"
                         labelPlacement="floating"
                         formControlName="address"
@@ -253,6 +263,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12" sizeMd="4">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-city"
+                        name="city"
                         label="City *"
                         labelPlacement="floating"
                         formControlName="city"
@@ -263,6 +275,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12" sizeMd="4">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-state"
+                        name="state"
                         label="State *"
                         labelPlacement="floating"
                         formControlName="state"
@@ -273,6 +287,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="6" sizeMd="2">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-state-code"
+                        name="stateCode"
                         label="State Code *"
                         labelPlacement="floating"
                         formControlName="stateCode"
@@ -283,6 +299,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="6" sizeMd="2">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-pincode"
+                        name="pincode"
                         label="Pincode *"
                         labelPlacement="floating"
                         formControlName="pincode"
@@ -296,6 +314,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12" sizeMd="6">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-phone"
+                        name="phone"
                         label="Official Phone *"
                         labelPlacement="floating"
                         formControlName="phone"
@@ -306,6 +326,8 @@ import { AuthService } from '../../core/services/auth.service';
                   <ion-col size="12" sizeMd="6">
                     <ion-item fill="outline" class="form-item">
                       <ion-input
+                        id="store-email"
+                        name="email"
                         label="Official Email *"
                         labelPlacement="floating"
                         formControlName="email"

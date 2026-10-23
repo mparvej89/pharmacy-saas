@@ -191,8 +191,8 @@ import { AuthService } from '../../core/services/auth.service';
               <ion-card-header>
                 <div class="card-title-row">
                   <ion-card-title>Recent Sales Invoices</ion-card-title>
-                  <ion-button fill="clear" size="small" routerLink="/reports">
-                    View All Reports <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
+                  <ion-button fill="clear" size="small" routerLink="/sales-history">
+                    View Sales History <ion-icon name="arrow-forward-outline" slot="end"></ion-icon>
                   </ion-button>
                 </div>
               </ion-card-header>

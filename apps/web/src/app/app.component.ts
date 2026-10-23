@@ -32,6 +32,10 @@ import {
   personCircleOutline,
   menuOutline,
   menuSharp,
+  walletOutline,
+  cashOutline,
+  peopleOutline,
+  receiptOutline,
 } from 'ionicons/icons';
 import { AuthService } from './core/services/auth.service';
 
@@ -123,6 +127,11 @@ import { AuthService } from './core/services/auth.service';
                     <ion-label>POS Billing Terminal</ion-label>
                   </ion-item>
 
+                  <ion-item routerLink="/sales-history" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="receipt-outline" slot="start"></ion-icon>
+                    <ion-label>Sales History</ion-label>
+                  </ion-item>
+
                   <ion-item routerLink="/medicines" routerLinkActive="active-item" class="nav-item">
                     <ion-icon name="medkit-outline" slot="start"></ion-icon>
                     <ion-label>Medicine Catalogue</ion-label>
@@ -141,6 +150,21 @@ import { AuthService } from './core/services/auth.service';
                   <ion-item routerLink="/returns" routerLinkActive="active-item" class="nav-item">
                     <ion-icon name="return-down-back-outline" slot="start"></ion-icon>
                     <ion-label>Returns & Quarantine</ion-label>
+                  </ion-item>
+
+                  <ion-item routerLink="/customers" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="people-outline" slot="start"></ion-icon>
+                    <ion-label>Patients & Customers</ion-label>
+                  </ion-item>
+
+                  <ion-item routerLink="/banking" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="cash-outline" slot="start"></ion-icon>
+                    <ion-label>Cash & Bank</ion-label>
+                  </ion-item>
+
+                  <ion-item routerLink="/accounts" routerLinkActive="active-item" class="nav-item">
+                    <ion-icon name="wallet-outline" slot="start"></ion-icon>
+                    <ion-label>Ledgers (Party Payables)</ion-label>
                   </ion-item>
 
                   <ion-item routerLink="/reports" routerLinkActive="active-item" class="nav-item">
@@ -167,59 +191,84 @@ import { AuthService } from './core/services/auth.service';
   `,
   styles: [
     `
+      ion-split-pane {
+        --side-width: 250px;
+        --side-max-width: 250px;
+        --side-min-width: 250px;
+      }
+      ion-menu {
+        --width: 250px;
+        --max-width: 250px;
+        --min-width: 250px;
+        border-right: 1px solid #e2e8f0;
+      }
       .menu-content {
         --background: #ffffff;
       }
       .user-profile-badge {
         background: #f8fafc;
         border-bottom: 1px solid #e2e8f0;
+        padding: 12px 14px;
       }
       .avatar-row {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
       }
       .user-avatar-icon {
-        font-size: 40px;
+        font-size: 34px;
         color: var(--ion-color-primary);
+        flex-shrink: 0;
       }
       .user-name {
         font-weight: 700;
-        font-size: 0.95rem;
+        font-size: 0.88rem;
         color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .role-badge {
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         margin-top: 2px;
+        letter-spacing: 0.02em;
       }
       .store-box {
         display: flex;
         align-items: center;
         gap: 6px;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: #64748b;
         background: #ffffff;
-        padding: 6px 10px;
+        padding: 5px 8px;
         border-radius: 6px;
         border: 1px solid #e2e8f0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .store-box span {
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .nav-list {
-        padding: 12px 8px;
+        padding: 8px 6px;
         background: transparent;
       }
       .nav-item {
         --background: transparent;
         --color: #334155;
-        --border-radius: 8px;
-        margin-bottom: 4px;
+        --border-radius: 7px;
+        --min-height: 40px;
+        margin-bottom: 3px;
         font-weight: 500;
-        font-size: 0.9rem;
+        font-size: 0.84rem;
         transition: all 0.15s ease-in-out;
       }
       .nav-item ion-icon {
         color: #64748b;
-        margin-right: 12px;
-        font-size: 20px;
+        margin-right: 10px;
+        font-size: 18px;
       }
       .nav-item.active-item {
         --background: #ccfbf1;
@@ -235,6 +284,7 @@ import { AuthService } from './core/services/auth.service';
       }
       .logout-section {
         margin-top: auto;
+        padding: 12px 14px;
       }
     `,
   ],
@@ -254,6 +304,10 @@ export class AppComponent {
       personCircleOutline,
       menuOutline,
       menuSharp,
+      walletOutline,
+      cashOutline,
+      peopleOutline,
+      receiptOutline,
     });
   }
 }

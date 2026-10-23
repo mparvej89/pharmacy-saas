@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateMedicineDto, UpdateMedicineDto, CheckDuplicateDto } from './dto/medicine.dto';
 import { Prisma } from '@prisma/client';
+import { calculatePackagingConfiguration } from './packaging-engine';
 
 @Injectable()
 export class MedicinesService {
@@ -132,14 +133,58 @@ export class MedicinesService {
       }
     }
 
+    // Run through automatic packaging and unit conversion engine
+    const pkgConfig = calculatePackagingConfiguration({
+      dosageForm: createDto.dosageForm,
+      baseUnit: createDto.baseUnit,
+      purchaseUnit: createDto.purchaseUnit || createDto.unitOfMeasure,
+      unitsPerPack: createDto.conversionFactor || createDto.packSize,
+      boxPackaging: createDto.boxPackaging,
+      stripsPerBox: createDto.stripsPerBox,
+      sellingPricePerPack: createDto.sellingPrice,
+      unitSellingPriceManual: createDto.unitSellingPrice,
+      packageVolume: createDto.packageVolume,
+      allowPartialDispensing: createDto.allowPartialDispensing,
+    });
+
+    if (!pkgConfig.isComplete && pkgConfig.validationErrors.length > 0) {
+      throw new ConflictException(pkgConfig.validationErrors.join('; '));
+    }
+
+    const conversionFactor = pkgConfig.conversionFactor;
+    const baseUnit = pkgConfig.baseUnit;
+    const purchaseUnit = pkgConfig.purchaseUnit;
+    const unitSellingPrice = pkgConfig.unitSellingPrice !== undefined
+      ? pkgConfig.unitSellingPrice
+      : undefined;
+
     return this.prisma.medicine.create({
       data: {
         ...createDto,
         storeId,
+        baseUnit,
+        purchaseUnit,
+        conversionFactor,
+        ...(unitSellingPrice !== undefined ? { unitSellingPrice } : {}),
         name: createDto.name.trim(),
         genericName: createDto.genericName.trim(),
       },
     });
+  }
+
+  getPackagingPreview(query: {
+    dosageForm: any;
+    baseUnit?: string;
+    purchaseUnit?: string;
+    unitsPerPack?: number;
+    boxPackaging?: boolean;
+    stripsPerBox?: number;
+    sellingPricePerPack?: number;
+    unitSellingPriceManual?: number;
+    packageVolume?: number;
+    allowPartialDispensing?: boolean;
+  }) {
+    return calculatePackagingConfiguration(query);
   }
 
   async update(storeId: string, id: string, updateDto: UpdateMedicineDto) {
@@ -198,4 +243,40 @@ export class MedicinesService {
       data: { isActive: !medicine.isActive },
     });
   }
+
+  async remove(storeId: string, id: string) {
+    await this.findOne(storeId, id);
+
+    // Check if there are active batches or sales/purchase records
+    const [batchesCount, salesCount, purchaseCount] = await Promise.all([
+      this.prisma.medicineBatch.count({ where: { medicineId: id } }),
+      this.prisma.saleItem.count({ where: { medicineId: id } }),
+      this.prisma.purchaseItem.count({ where: { medicineId: id } }),
+    ]);
+
+    if (batchesCount > 0 || salesCount > 0 || purchaseCount > 0) {
+      // If historical ledger or inventory batches exist, soft delete by deactivating to preserve audit & ledger integrity
+      await this.prisma.medicine.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      return {
+        success: true,
+        softDeleted: true,
+        message: 'Medicine has existing inventory or sales history; it has been deactivated and archived.',
+      };
+    }
+
+    // Otherwise permanently delete
+    await this.prisma.medicine.delete({
+      where: { id },
+    });
+
+    return {
+      success: true,
+      softDeleted: false,
+      message: 'Medicine deleted successfully.',
+    };
+  }
 }
+

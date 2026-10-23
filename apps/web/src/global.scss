@@ -25,6 +25,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Pharmacy Dashboard Sidebar Width Controls */
+ion-split-pane {
+  --side-width: 250px !important;
+  --side-max-width: 250px !important;
+  --side-min-width: 250px !important;
+}
+
+ion-menu {
+  --width: 250px !important;
+  --max-width: 250px !important;
+  --min-width: 250px !important;
+}
+
 /* Custom Scrollbars for High-Density POS Screens */
 ::-webkit-scrollbar {
   width: 6px;
@@ -138,3 +151,231 @@ ion-select::part(label) {
   overflow: visible !important;
   font-size: 0.85rem !important;
 }
+
+/* Professional SaaS Popover Dropdown Styling (replaces raw mobile radio dialogs) */
+.custom-popover {
+  --backdrop-opacity: 0.15;
+  --box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+}
+
+.custom-popover::part(content) {
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 4px;
+}
+
+.custom-popover ion-list {
+  background: transparent;
+  padding: 0;
+}
+
+.custom-popover ion-item {
+  --background: transparent;
+  --color: #1e293b;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --inner-padding-end: 0;
+  --min-height: 38px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-radius: 6px;
+  margin: 2px 0;
+  transition: background-color 0.15s ease;
+}
+
+.custom-popover ion-item:hover,
+.custom-popover ion-item.item-radio-checked {
+  --background: #f1f5f9;
+  --color: var(--ion-color-primary, #0284c7);
+  font-weight: 600;
+}
+
+.custom-popover ion-radio {
+  --color: #94a3b8;
+  --color-checked: var(--ion-color-primary, #0284c7);
+}
+
+/* Premium SaaS Confirmation Dialogs / ion-alert */
+ion-alert.custom-alert {
+  --backdrop-opacity: 0.45;
+}
+
+ion-alert.custom-alert .alert-wrapper {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 24px 20px 16px 20px;
+  min-width: 380px;
+  max-width: 440px;
+}
+
+ion-alert.custom-alert .alert-head {
+  padding: 0 0 12px 0;
+  text-align: left;
+}
+
+ion-alert.custom-alert .alert-title {
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+ion-alert.custom-alert .alert-message {
+  padding: 0 0 16px 0;
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #475569;
+  text-align: left;
+}
+
+ion-alert.custom-alert .alert-input-group {
+  padding: 0 0 16px 0;
+}
+
+ion-alert.custom-alert .alert-input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  color: #0f172a;
+  background: #f8fafc;
+  transition: all 0.15s ease;
+}
+
+ion-alert.custom-alert .alert-input:focus {
+  border-color: #0284c7;
+  background: #ffffff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+ion-alert.custom-alert .alert-button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 8px 0 0 0;
+}
+
+ion-alert.custom-alert .alert-button {
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  height: 38px;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: all 0.15s ease;
+}
+
+ion-alert.custom-alert .alert-btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+ion-alert.custom-alert .alert-btn-cancel:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+ion-alert.custom-alert .alert-btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.25);
+}
+
+ion-alert.custom-alert .alert-btn-danger:hover {
+  background: #dc2626;
+  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.35);
+}
+
+ion-alert.custom-alert .alert-btn-primary {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);
+}
+
+ion-alert.custom-alert .alert-btn-primary:hover {
+  background: #0369a1;
+  box-shadow: 0 4px 6px rgba(3, 105, 161, 0.35);
+}
+
+ion-alert.custom-alert .alert-btn-warning {
+  background: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25);
+}
+
+ion-alert.custom-alert .alert-btn-warning:hover {
+  background: #d97706;
+  box-shadow: 0 4px 6px rgba(217, 119, 6, 0.35);
+}
+
+/* Premium Top-Right Toast Notifications */
+ion-toast,
+ion-toast.toast-top-right {
+  --background: #0f172a;
+  --color: #ffffff;
+  --border-radius: 10px;
+  --box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  --button-color: #38bdf8;
+  --white-space: pre-wrap;
+  --max-width: 420px;
+  --min-width: 280px;
+  --width: auto;
+  font-family: inherit;
+  font-size: 0.92rem;
+  z-index: 99999 !important;
+
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: flex-start !important;
+}
+
+/* Override Ionic's default centering on the shadow part wrapper */
+ion-toast::part(wrapper) {
+  left: auto !important;
+  right: 20px !important;
+  top: 20px !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+  max-width: 420px !important;
+  width: auto !important;
+}
+
+ion-toast .toast-wrapper,
+ion-toast::part(container) {
+  margin-top: 0 !important;
+  margin-right: 0 !important;
+  margin-left: auto !important;
+  border-left: 4px solid #0284c7 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+ion-toast .toast-message,
+ion-toast::part(message) {
+  color: #f8fafc !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  padding: 12px 16px !important;
+}
+
+ion-toast .toast-button,
+ion-toast::part(button) {
+  color: #38bdf8 !important;
+  font-weight: 600 !important;
+  font-size: 0.82rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0 12px !important;
+}
+
+
+
