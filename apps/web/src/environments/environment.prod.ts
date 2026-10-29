@@ -3,7 +3,7 @@
 // below with your actual Render service hostname (e.g. 'https://pharmacy-saas-api.onrender.com/api/v1').
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://pharmacy-saas-api.onrender.com/api/v1',
+  apiBaseUrl: 'https://pharmacy-saas-api-8134.onrender.com/api/v1',
   firebase: {
     apiKey: 'AIzaSyDjvZzSC6VSF67m-PnrBage7-bGjeHIfL4',
     authDomain: 'pharmacy-65783.firebaseapp.com',
