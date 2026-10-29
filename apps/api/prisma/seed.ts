@@ -6,11 +6,27 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding initial pharmacy store, staff, medicines, and inventory batches...');
 
+  // 0. Create or update Default SaaS Tenant
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: 'apollo-pharmacy' },
+    update: {},
+    create: {
+      name: 'Apollo Pharmacy Enterprises',
+      slug: 'apollo-pharmacy',
+      legalName: 'Apollo Pharmacies Limited',
+      gstin: '29ABCDE1234F1Z5',
+      contactEmail: 'indiranagar@apollopharmacy.local',
+      contactPhone: '+91 80 2525 9900',
+      subscriptionPlan: 'ENTERPRISE',
+    },
+  });
+
   // 1. Create or update Default Pharmacy Store
   const store = await prisma.tenantStore.upsert({
     where: { code: 'APOLLO-IND' },
-    update: {},
+    update: { tenantId: tenant.id },
     create: {
+      tenantId: tenant.id,
       name: 'Apollo Pharmacy Indiranagar',
       code: 'APOLLO-IND',
       drugLicenseNumber: 'KA-B2-887766',
@@ -23,6 +39,27 @@ async function main() {
       phone: '+91 80 2525 9900',
       email: 'indiranagar@apollopharmacy.local',
       currency: 'INR',
+    },
+  });
+
+  const branchStore = await prisma.store.upsert({
+    where: { code: 'APOLLO-IND' },
+    update: { tenantId: tenant.id },
+    create: {
+      id: store.id,
+      tenantId: tenant.id,
+      name: store.name,
+      code: store.code,
+      drugLicenseNumber: store.drugLicenseNumber,
+      gstin: store.gstin,
+      address: store.address,
+      city: store.city,
+      state: store.state,
+      stateCode: store.stateCode,
+      pincode: store.pincode,
+      phone: store.phone,
+      email: store.email,
+      currency: store.currency,
     },
   });
 
@@ -94,6 +131,25 @@ async function main() {
     update: { role: UserRole.BILLING_OPERATOR },
     create: { userId: cashierUser.id, storeId: store.id, role: UserRole.BILLING_OPERATOR },
   });
+
+  // Sync StoreMembership records
+  for (const [usr, role, isDefault] of [
+    [adminUser, UserRole.STORE_OWNER, true],
+    [pharmacistUser, UserRole.PHARMACIST, true],
+    [cashierUser, UserRole.BILLING_OPERATOR, true],
+  ] as const) {
+    await prisma.storeMembership.upsert({
+      where: { storeId_userId: { storeId: branchStore.id, userId: usr.id } },
+      update: { role, isDefault },
+      create: {
+        tenantId: tenant.id,
+        storeId: branchStore.id,
+        userId: usr.id,
+        role,
+        isDefault,
+      },
+    });
+  }
 
   // Ensure Super Admin has NO store role linkage (pure SaaS Platform Administrator)
   await prisma.userStoreRole.deleteMany({
@@ -298,6 +354,26 @@ async function main() {
         data: {
           ...medDetails,
           storeId: store.id,
+        },
+      });
+    }
+
+    if (medDetails.barcode) {
+      await prisma.medicineBarcode.upsert({
+        where: {
+          storeId_barcode: {
+            storeId: store.id,
+            barcode: medDetails.barcode,
+          },
+        },
+        update: { isPrimary: true },
+        create: {
+          tenantId: tenant.id,
+          storeId: store.id,
+          branchId: branchStore.id,
+          medicineId: medicine.id,
+          barcode: medDetails.barcode,
+          isPrimary: true,
         },
       });
     }

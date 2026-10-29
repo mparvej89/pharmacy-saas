@@ -1,12 +1,10 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import { ExecutionContext, Injectable, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 
 export const IS_PUBLIC_KEY = 'isPublic';
-export const Public = () => (target: any, key?: string | symbol, descriptor?: any) => {
-  Reflector.createDecorator<boolean>()(true);
-};
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {

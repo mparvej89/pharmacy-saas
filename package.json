@@ -8,14 +8,20 @@
   ],
   "scripts": {
     "start:api": "npm --workspace=apps/api run start:dev",
+    "start:api:prod": "npm --workspace=apps/api run start:prod",
     "start:web": "npm --workspace=apps/web run start",
-    "build:api": "npm --workspace=apps/api run build",
+    "build:api": "npm --workspace=apps/api run prisma:generate && npm --workspace=apps/api run build",
     "build:web": "npm --workspace=apps/web run build",
     "test:api": "npm --workspace=apps/api run test",
     "test:web": "npm --workspace=apps/web run test",
     "db:migrate": "npm --workspace=apps/api run prisma:migrate",
+    "db:deploy": "npm --workspace=apps/api run prisma:deploy",
     "db:generate": "npm --workspace=apps/api run prisma:generate",
     "db:seed": "npm --workspace=apps/api run prisma:seed"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "keywords": [
     "pharmacy",

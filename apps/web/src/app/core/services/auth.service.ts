@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { UserSession, StoreInfo } from '../models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly baseUrl = 'http://localhost:3000/api/v1';
+  private readonly baseUrl = environment.apiBaseUrl;
 
   private currentUserSignal = signal<UserSession | null>(this.getStoredUser());
 
